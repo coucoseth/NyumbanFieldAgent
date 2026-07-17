@@ -10,10 +10,22 @@
     "test": "jest"
   },
   "dependencies": {
+    "@nozbe/watermelondb": "^0.28.0",
+    "@react-native/new-app-screen": "0.86.0",
+    "@react-navigation/bottom-tabs": "^6.5.11",
+    "@react-navigation/native": "^6.1.9",
+    "@react-navigation/stack": "^6.3.20",
+    "@shopify/flash-list": "^1.6.0",
+    "axios": "^1.6.0",
     "react": "19.2.3",
     "react-native": "0.86.0",
-    "@react-native/new-app-screen": "0.86.0",
-    "react-native-safe-area-context": "^5.5.2"
+    "react-native-mmkv": "^2.11.0",
+    "react-native-paper": "^5.12.3",
+    "react-native-reanimated": "^3.6.0",
+    "react-native-safe-area-context": "^4.8.0",
+    "react-native-screens": "^3.29.0",
+    "react-native-vector-icons": "^10.0.3",
+    "react-native-vision-camera": "^3.9.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

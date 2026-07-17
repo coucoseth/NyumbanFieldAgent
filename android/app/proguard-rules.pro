@@ -8,3 +8,10 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+
+# WatermelonDB rules
+-keep class com.nozbe.watermelondb.** { *; }
+
+# MMKV rules
+-keep class com.reactnativemmkv.** { *; }
+-keep class com.tencent.mmkv.** { *; }
