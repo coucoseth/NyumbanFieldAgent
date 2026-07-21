@@ -1,97 +1,70 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Nyumban Field Agent App
 
-# Getting Started
+Nyumban Field Agent is an offline-first React Native application designed for property condition reporting in low-connectivity areas (e.g., stairwells, rural sites). Optimized for low-end hardware (2GB RAM), the app features resilient synchronization, version conflict management, and high-performance list rendering.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+---
 
-## Step 1: Start Metro
+## 🚀 How to Run the Project
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+### Prerequisites
+* **Node.js**: `>= 22.11.0`
+* **JDK**: Zulu OpenJDK `17`
+* **Android SDK**: NDK version `27.1.12297006`
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+### Setup & Build Steps
+1. **Configure Environment Variables**:
+   Open [src/config/constants.ts](file:///Users/mac/Desktop/projects/NyumbanFieldAgent/src/config/constants.ts) and ensure the `ASSESSMENT_KEY` contains your active `X-Assessment-Key`.
 
-```sh
-# Using npm
-npm start
+2. **Install Dependencies**:
+   Ensure all compatible native package versions are synchronized:
+   ```bash
+   npm install --legacy-peer-deps
+   ```
 
-# OR using Yarn
-yarn start
-```
+3. **Bundling Assets (Android Vector Icons)**:
+   Ensure Android icon asset copying is linked:
+   ```bash
+   cd android && ./gradlew clean && cd ..
+   ```
 
-## Step 2: Build and run your app
+4. **Launch Metro Server**:
+   Start the Metro Bundler with a reset cache:
+   ```bash
+   npx react-native start --reset-cache
+   ```
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+5. **Build and Run Android**:
+   In another terminal tab, launch the Android build:
+   ```bash
+   npx react-native run-android
+   ```
 
-### Android
+---
 
-```sh
-# Using npm
-npm run android
+## 🛠️ Key Architectural Decisions & Rationale
 
-# OR using Yarn
-yarn android
-```
+### Phase 1: Native Dependencies & Architecture Compliance
+* **Upgrade to compatible modern JSI packages**: Bootstrap packages were upgraded (e.g., `react-native-screens` to `^4.0.0`, `react-native-vision-camera` to `^4.5.2`, and `react-native-safe-area-context` to `^5.5.2`) to maintain compatibility with React Native `0.86.0` JSI internal upgrades (Yoga v3 and Choreographer deprecation).
+* **Heap and ProGuard optimizations**: Set `largeHeap="true"` in the Android Manifest to prevent Out-Of-Memory (OOM) crashes on low-end 2GB RAM devices when uploading images. Configured database ProGuard rules to protect native WatermelonDB SQLite JSI hooks during minification.
 
-### iOS
+### Phase 2: Database Layer (WatermelonDB)
+* **Underlying Architecture**: Selected **WatermelonDB** over AsyncStorage or basic JSON stores because it utilizes a fast SQLite JSI adapter.
+* **No Redux / Global State Renders**: Components directly subscribe to DB queries via query observations, eliminating global state re-render overhead. Relational schemas map `Property` $\rightarrow$ `Room` $\rightarrow$ `InspectionDraft` $\rightarrow$ `DraftRoom` $\rightarrow$ `LocalPhoto` lazily.
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+### Phase 3: Token Mutex Engine & Resilient Storage
+* **Axios Mutex Interceptors**: Added atomic request/response queue locks. Concurrent API calls are suspended and queued if a token refresh is active, preventing redundant `/auth/refresh` sessions and token invalidation.
+* **Synchronous MMKV with Memory Fallback**: Implemented MMKV for instantaneous access to keys on JSI threads. Configured a try-catch memory-based storage fallback to prevent JSI-disabled crashes during Chrome Remote Debugging.
+* **Global Router Navigation Ref**: Integrated a headless navigation reference (`RootNavigation.ts`) so our network interceptor can force a session logout redirect to `LoginScreen` directly from JSI callbacks.
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+### Phase 4: Resilient Offline Outbox Synchronization
+* **Sequential Outbox Processing**: Drafts are synced using a sequential loop to avoid memory spikes. 
+* **Backoff & Quota Ceiling Handling**: 
+  * Network requests are wrapped in an exponential backoff retry loop (covering transient `500` / `503` random API failures).
+  * Storage quota limit `507` results in immediate halting, marking the draft as `failed` to prevent network thrashing.
+* **Version Mismatch Resolution (409)**: On receiving a 409, the sync engine marks the local draft as `conflict_detected`, immediately writes the server's newer property state (rooms & labels) to the database, and halts the loop to trigger the Reconciliation comparison screen.
 
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+### Phase 5: UI Layer & Layout Optimization
+* **Debounced Search Box**: A 200ms debounce window limits reactive SQLite query updates.
+* **Debounced Uncontrolled Text Fields**: Room inspection notes are uncontrolled text fields with a 150ms debounced auto-save transaction to SQLite, eliminating input stuttering.
+* **High-Performance List Rendering**: Used `@shopify/flash-list` with `estimatedItemSize={120}` for property directory rendering, recycling list cell components to conserve CPU cycles.
+* **Web UI Branding**: Copied the web dashboard colors (Deep Navy `#002D40` and Accent Amber `#F39C12`) to align visual brand identity.
