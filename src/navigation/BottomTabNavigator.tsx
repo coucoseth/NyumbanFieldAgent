@@ -1,5 +1,5 @@
 import React from 'react';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import colors from '../config/colors';
 import Directory from '../screens/Directory';
@@ -7,21 +7,28 @@ import Inspection from '../screens/Inspection';
 import Reconciliation from '../screens/Reconciliation';
 import SyncCenter from '../screens/SyncCenter';
 
-const Tab = createBottomTabNavigator();
+export type BottomTabParamList = {
+  Directory: undefined;
+  Inspection: undefined;
+  Reconciliation: undefined;
+  SyncCenter: undefined;
+};
 
-const BottomTabNavigator = () => {
+const Tab = createBottomTabNavigator<BottomTabParamList>();
+
+const BottomTabNavigator: React.FC = () => {
   return (
     <Tab.Navigator
       initialRouteName="Directory"
       backBehavior="history"
-      screenOptions={({route}) => ({
+      screenOptions={({ route }) => ({
         tabBarShowLabel: false,
         tabBarActiveTintColor: colors.lightGreen,
         tabBarInactiveTintColor: colors.darkGray,
         headerShown: false,
-        tabBarIcon: ({focused, color, size}) => {
-          size = focused ? size + 11 : size + 5;
-          let iconName;
+        tabBarIcon: ({ focused, color, size }) => {
+          const iconSize = focused ? size + 11 : size + 5;
+          let iconName = 'home-city-outline';
           if (route.name === 'Inspection') {
             iconName = focused ? 'clipboard-check' : 'clipboard-check-outline';
           } else if (route.name === 'Directory') {
@@ -31,7 +38,7 @@ const BottomTabNavigator = () => {
           } else if (route.name === 'SyncCenter') {
             iconName = focused ? 'cloud-sync' : 'cloud-sync-outline';
           }
-          return <Icon name={iconName} size={size} color={color} />;
+          return <Icon name={iconName} size={iconSize} color={color} />;
         },
       })}>
       <Tab.Screen name="Directory" component={Directory} />
